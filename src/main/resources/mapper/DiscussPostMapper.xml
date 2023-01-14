@@ -22,7 +22,7 @@
     </select>
 
 <!--        int selectDiscussPostRows(@Param("userId") int userId);-->
-    <select id="selectDiscussPostRows">
+    <select id="selectDiscussPostRows" resultType="Integer">
         select count(id)
         from discuss_post
         where status != 2
