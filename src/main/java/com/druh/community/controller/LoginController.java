@@ -3,6 +3,9 @@ package com.druh.community.controller;
 import com.druh.community.entity.User;
 import com.druh.community.service.UserService;
 import com.druh.community.utils.CommunityConstant;
+import com.google.code.kaptcha.Producer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,13 +13,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Map;
 
 @Controller
 public class LoginController implements CommunityConstant {
 
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
+
     @Autowired
-    UserService userService;
+    private Producer kaptchaProducer;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 点击注册按钮，去注册页面
@@ -35,6 +49,7 @@ public class LoginController implements CommunityConstant {
 
     /**
      * 用户在注册页面填好表格，点击提交，所以是post不是get
+     *
      * @param model
      * @param user
      * @return
@@ -63,9 +78,10 @@ public class LoginController implements CommunityConstant {
     /**
      * 用户在邮件中收到激活邮件，点击里面的激活链接，进行激活，调用UserService里的activate方法进行激活和判断
      * http://localhost:8080/community/activation/用户的id/用户的ActivationCode
+     *
      * @param model
      * @param userId 用户id
-     * @param code 用户自己带来的激活码(URL中的)
+     * @param code   用户自己带来的激活码(URL中的)
      * @return
      */
     @GetMapping("/activation/{userId}/{code}")
@@ -86,5 +102,25 @@ public class LoginController implements CommunityConstant {
             model.addAttribute("target", "/index");
         }
         return "/site/operate-result";
+    }
+
+    @GetMapping("/kaptcha")
+    public void getKaptcha(HttpServletResponse response, HttpSession session) {
+        // 生成验证码
+        String text = kaptchaProducer.createText();
+        BufferedImage image = kaptchaProducer.createImage(text);
+
+        // 将验证码存入session
+        session.setAttribute("kaptcha", text);
+
+        // 将图片输出给浏览器
+        response.setContentType("image/png");
+        try {
+            ServletOutputStream outputStream = response.getOutputStream();
+            ImageIO.write(image, "png", outputStream);
+        } catch (IOException e) {
+            logger.error("响应验证码失败:" + e.getMessage());
+        }
+
     }
 }
