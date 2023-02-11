@@ -1,6 +1,8 @@
 package com.druh.community.service;
 
+import com.druh.community.entity.LoginTicket;
 import com.druh.community.entity.User;
+import com.druh.community.mapper.LoginTicketMapper;
 import com.druh.community.mapper.UserMapper;
 import com.druh.community.utils.CommunityConstant;
 import com.druh.community.utils.CommunityUtil;
@@ -29,6 +31,9 @@ public class UserService implements CommunityConstant {
     @Autowired
     private TemplateEngine templateEngine;
 
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
+
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
@@ -38,8 +43,8 @@ public class UserService implements CommunityConstant {
     /**
      * 根据id查询用户
      *
-     * @param id
-     * @return
+     * @param id id
+     * @return 返回User
      */
     public User findUserById(int id) {
         return userMapper.selectById(id);
@@ -47,8 +52,8 @@ public class UserService implements CommunityConstant {
 
     /**
      * 注册用户，对应的controller为LoginController中的register方法
-     * @param user
-     * @return
+     * @param user 前端表单传入的User对象
+     * @return 返回存了多种处理情况的map
      */
     public Map<String, Object> register(User user) {
         Map<String, Object> map = new HashMap<>();
@@ -94,7 +99,7 @@ public class UserService implements CommunityConstant {
         user.setCreateTime(new Date());
         userMapper.insertUser(user);
 
-        /**
+        /*
          * 发送激活邮件
          */
         /* context就是用来携带参数的，看templateEngine.process那一行，模板引擎的process方法就是用来处理模板的，
@@ -124,9 +129,9 @@ public class UserService implements CommunityConstant {
     /**
      * 激活用户的账户
      * 根据用户id和传进来的激活码，去数据库中查找并比对
-     * @param userId
-     * @param activationCode
-     * @return
+     * @param userId userId
+     * @param activationCode 激活码
+     * @return 返回对应处理结果的数字
      */
     public int activate(int userId, String activationCode) {
         User user = userMapper.selectById(userId);
@@ -144,6 +149,60 @@ public class UserService implements CommunityConstant {
         }
     }
 
+    /**
+     * 处理登录请求
+     * @param username 用户名
+     * @param password 密码
+     * @param expireSeconds 过期时间
+     * @return 返回一个包含多种情况的map，key错误名字，value是错误信息
+     */
+    public Map<String, Object> login(String username, String password, int expireSeconds) {
+        HashMap<String, Object> map = new HashMap<>();
+        // 空值处理
+        if (StringUtils.isBlank(username)) {
+            map.put("usernameMsg", "账号不能为空！");
+            return map;
+        }
+        if (StringUtils.isBlank(password)) {
+            map.put("passwordMsg", "密码不能为空！");
+            return map;
+        }
 
+        User user = userMapper.selectByName(username);
+        if (user == null) {
+            map.put("usernameMsg", "账号不存在！");
+            return map;
+        }
+        // 验证状态
+        if (user.getStatus() == 0) {
+            map.put("usernameMsg", "账号未激活！");
+            return map;
+        }
+
+        password = CommunityUtil.md5(password + user.getSalt());
+        if (!user.getPassword().equals(password)) {
+            map.put("passwordMsg", "密码错误！");
+            return map;
+        }
+
+        // 生成登录凭证
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(user.getId());
+        loginTicket.setTicket(CommunityUtil.generateUUID());
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + expireSeconds * 1000));
+        loginTicket.setStatus(0);
+        loginTicketMapper.insertLoginTicket(loginTicket);
+
+        map.put("ticket", loginTicket.getTicket());
+        return map;
+    }
+
+    /**
+     * 退出登录
+     * @param ticket 登录凭证
+     */
+    public void logout(String ticket) {
+        loginTicketMapper.updateStatus(ticket, 1);
+    }
 }
 

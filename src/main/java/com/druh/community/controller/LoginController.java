@@ -4,17 +4,21 @@ import com.druh.community.entity.User;
 import com.druh.community.service.UserService;
 import com.druh.community.utils.CommunityConstant;
 import com.google.code.kaptcha.Producer;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
@@ -31,6 +35,9 @@ public class LoginController implements CommunityConstant {
 
     @Autowired
     private UserService userService;
+
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
 
     /**
      * 点击注册按钮，去注册页面
@@ -104,6 +111,12 @@ public class LoginController implements CommunityConstant {
         return "/site/operate-result";
     }
 
+    /**
+     * 获取验证码
+     *
+     * @param response response
+     * @param session  session
+     */
     @GetMapping("/kaptcha")
     public void getKaptcha(HttpServletResponse response, HttpSession session) {
         // 生成验证码
@@ -122,5 +135,59 @@ public class LoginController implements CommunityConstant {
             logger.error("响应验证码失败:" + e.getMessage());
         }
 
+    }
+
+
+    /**
+     * 处理登录请求
+     *
+     * @param username   表单中的username
+     * @param password   表单中的password
+     * @param code       用户输入的验证码
+     * @param rememberMe 是否点击了 ”记住我“
+     * @param session    session用来取kaptcha，因为之前的获取kaptcha方法是把katcha存在session中的，方便各个方法来获取，model的话应该不行吧
+     * @param response   response用来返回cookie给客户端
+     * @param model      model用来把消息带给前端
+     * @return 跳转
+     */
+    @PostMapping("/login")
+    public String login(String username, String password, String code, boolean rememberMe,
+                        HttpSession session, HttpServletResponse response, Model model) {
+        // 从session中取kaptcha
+        String kaptcha = (String) session.getAttribute("kaptcha");
+        // 首先判断验证码，验证码不对，用户名和密码都不用看了
+        if (StringUtils.isBlank(kaptcha) || StringUtils.isBlank(code) || !code.equalsIgnoreCase(kaptcha)) {
+            model.addAttribute("codeMsg", "验证码不正确!");
+            return "/site/login";
+        }
+        // 根据有没有勾选 ”记住我“， 来判断失效时常
+        int expiredSeconds = rememberMe ? REMEMBER_ME_EXPIRE_SECONDS : DEFAULT_EXPIRE_SECONDS;
+        // 让userService来处理
+        Map<String, Object> map = userService.login(username, password, expiredSeconds);
+        // 返回的map中有”ticket“键，说明成功了
+        if (map.containsKey("ticket")) {
+            // 把ticket存到cookie中
+            Cookie cookie = new Cookie("ticket", map.get("ticket").toString());
+            cookie.setMaxAge(expiredSeconds);
+            // 这个cookie在本项目的所有网页都有效
+            cookie.setPath(contextPath);
+            response.addCookie(cookie);
+            return "redirect:/index";
+        } else {
+            model.addAttribute("usernameMsg", map.get("usernameMsg"));
+            model.addAttribute("passwordMsg", map.get("passwordMsg"));
+            return "/site/login";
+        }
+    }
+
+    /**
+     * 处理退出登录请求
+     * @param ticket 登陆凭证
+     * @return 退出后跳转到登录页面
+     */
+    @GetMapping("/logout")
+    public String logout(@CookieValue(name = "ticket") String ticket) {
+        userService.logout(ticket);
+        return "redirect:/login";
     }
 }
