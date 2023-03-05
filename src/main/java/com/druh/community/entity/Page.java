@@ -10,7 +10,7 @@ public class Page {
     // 显示上限
     private int limit = 10;
     // 数据总数(用于计算总页数)
-    private int rows;
+    public int rows;
     // 请求路径(用于在分页链接中复用，不记得了请看index.html中分页部分的代码)
     private String path;
 
