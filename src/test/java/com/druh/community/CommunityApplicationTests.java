@@ -5,6 +5,7 @@ import com.druh.community.entity.LoginTicket;
 import com.druh.community.mapper.DiscussPostMapper;
 import com.druh.community.mapper.LoginTicketMapper;
 import com.druh.community.utils.MailClient;
+import com.druh.community.utils.SensitiveFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -73,5 +74,14 @@ class CommunityApplicationTests {
         loginTicketMapper.updateStatus("abc", 1);
         loginTicket = loginTicketMapper.selectByTicket("abc");
         System.out.println(loginTicket);
+    }
+
+    @Autowired
+    private SensitiveFilter sensitiveFilter;
+    @Test
+    public void testSensitiveFilter() {
+        String text = "这里可以赌博，可以嫖娼";
+        text = sensitiveFilter.filter(text);
+        System.out.println(text);
     }
 }
