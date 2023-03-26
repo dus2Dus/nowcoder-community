@@ -152,8 +152,8 @@ public class SensitiveFilter {
             return isKeyword;
         }
         // 设置当前路径的字符串为keyword
-        public void setKeyword(boolean keyword) {
-            isKeyword = keyword;
+        public void setKeyword(boolean flag) {
+            isKeyword = flag;
         }
         // 添加子节点
         public void addSubNode(Character c, TrieNode node) {

@@ -2,8 +2,10 @@ package com.druh.community.service;
 
 import com.druh.community.entity.DiscussPost;
 import com.druh.community.mapper.DiscussPostMapper;
+import com.druh.community.utils.SensitiveFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
 
@@ -11,7 +13,9 @@ import java.util.List;
 public class DiscussPostService {
 
     @Autowired
-    DiscussPostMapper discussPostMapper;
+    private DiscussPostMapper discussPostMapper;
+    @Autowired
+    private SensitiveFilter sensitiveFilter;
 
     /**
      * 根据userId, offset, limit来查询帖子
@@ -34,5 +38,23 @@ public class DiscussPostService {
         return discussPostMapper.selectDiscussPostRows(userId);
     }
 
+    /**
+     * 添加一条帖子
+     * @param post 要发布的帖子对象
+     * @return 范围插入后受影响的行数
+     */
+    public int addDiscussionPost(DiscussPost post) {
+        if (post == null) {
+            throw new IllegalArgumentException("参数不能为空");
+        }
+        // 转义HTML标签
+        post.setTitle(HtmlUtils.htmlEscape(post.getTitle()));
+        post.setContent((HtmlUtils.htmlEscape(post.getContent())));
 
+        // 过滤敏感词
+        post.setTitle((sensitiveFilter.filter(post.getTitle())));
+        post.setContent(sensitiveFilter.filter(post.getContent()));
+
+        return discussPostMapper.insertDiscussPost(post);
+    }
 }
