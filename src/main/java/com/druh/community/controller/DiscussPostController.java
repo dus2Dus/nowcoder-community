@@ -3,13 +3,13 @@ package com.druh.community.controller;
 import com.druh.community.entity.DiscussPost;
 import com.druh.community.entity.User;
 import com.druh.community.service.DiscussPostService;
+import com.druh.community.service.UserService;
 import com.druh.community.utils.CommunityUtil;
 import com.druh.community.utils.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 
@@ -24,6 +24,9 @@ public class DiscussPostController {
 
     @Autowired
     private DiscussPostService discussPostService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private HostHolder hostHolder;
@@ -46,4 +49,27 @@ public class DiscussPostController {
         // 报错的情况将来统一处理
         return CommunityUtil.getJSONString(0, "发布成功！");
     }
+
+    @GetMapping("/detail/{discussPostId}")
+    public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Model model) {
+        // 帖子
+        DiscussPost post = discussPostService.findDiscussPostById(discussPostId);
+        model.addAttribute("post", post);
+        // 用户
+        User user = userService.findUserById(post.getUserId());
+        model.addAttribute("user", user);
+
+        return "/site/discuss-detail";
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
