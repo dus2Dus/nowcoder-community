@@ -2,8 +2,10 @@ package com.druh.community;
 
 import com.druh.community.entity.DiscussPost;
 import com.druh.community.entity.LoginTicket;
+import com.druh.community.entity.Message;
 import com.druh.community.mapper.DiscussPostMapper;
 import com.druh.community.mapper.LoginTicketMapper;
+import com.druh.community.mapper.MessageMapper;
 import com.druh.community.utils.MailClient;
 import com.druh.community.utils.SensitiveFilter;
 import org.junit.jupiter.api.Test;
@@ -83,5 +85,17 @@ class CommunityApplicationTests {
         String text = "这里可以赌博，可以嫖娼";
         text = sensitiveFilter.filter(text);
         System.out.println(text);
+    }
+
+    @Autowired
+    private MessageMapper messageMapper;
+    @Test
+    public void testSelectLetters() {
+        List<Message> messages = messageMapper.selectConversations(111, 0, 20);
+        for (Message message : messages) {
+            System.out.println(message);
+        }
+        int conversationCount = messageMapper.selectConversationCount(111);
+        System.out.println(conversationCount);
     }
 }
