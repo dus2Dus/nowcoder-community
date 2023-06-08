@@ -4,7 +4,9 @@ import com.druh.community.entity.DiscussPost;
 import com.druh.community.entity.Page;
 import com.druh.community.entity.User;
 import com.druh.community.service.DiscussPostService;
+import com.druh.community.service.LikeService;
 import com.druh.community.service.UserService;
+import com.druh.community.utils.CommunityConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,13 +19,16 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-public class HomeController {
+public class HomeController implements CommunityConstant {
 
     @Autowired
     private DiscussPostService discussPostService;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LikeService likeService;
 
     @RequestMapping("/index")
     public String getIndexPage(Model model, Page page) {    //这个page, springmvc会自动创建并传给我
@@ -39,13 +44,19 @@ public class HomeController {
 
         List<DiscussPost> postList = discussPostService.findDiscussPosts(0, page.getOffset(), page.getLimit());
         List<Map<String, Object>> discussPosts = new ArrayList<>();
-        for (DiscussPost post :
-                postList) {
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("post", post);
-            User user = userService.findUserById(post.getUserId());
-            map.put("user", user);
-            discussPosts.add(map);
+        if (postList != null) {
+            for (DiscussPost post :
+                    postList) {
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("post", post);
+                User user = userService.findUserById(post.getUserId());
+                map.put("user", user);
+
+                long likeCount = likeService.getEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount", likeCount);
+
+                discussPosts.add(map);
+            }
         }
         model.addAttribute("discussPosts", discussPosts);
         return "/index";

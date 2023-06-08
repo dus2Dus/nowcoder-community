@@ -2,6 +2,7 @@ package com.druh.community.controller;
 
 import com.druh.community.annotation.LoginRequired;
 import com.druh.community.entity.User;
+import com.druh.community.service.LikeService;
 import com.druh.community.service.UserService;
 import com.druh.community.utils.CommunityUtil;
 import com.druh.community.utils.HostHolder;
@@ -49,6 +50,9 @@ public class UserController {
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private LikeService likeService;
 
     // 返回账户设置页
     @LoginRequired
@@ -125,5 +129,20 @@ public class UserController {
         } catch (IOException e) {
             logger.error("读取头像失败: " + e.getMessage());
         }
+    }
+
+    // 个人主页
+    @GetMapping("/profile/{userId}")
+    public String getProfilePage(@PathVariable("userId") int userId, Model model) {
+        // 用户
+        User user = userService.findUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("该用户不存在");
+        }
+        model.addAttribute("user", user);
+        // 收到赞的数量
+        int count = likeService.getUserLikeCount(userId);
+        model.addAttribute("likeCount", count);
+        return "/site/profile";
     }
 }
