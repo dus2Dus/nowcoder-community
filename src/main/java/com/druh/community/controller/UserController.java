@@ -2,8 +2,10 @@ package com.druh.community.controller;
 
 import com.druh.community.annotation.LoginRequired;
 import com.druh.community.entity.User;
+import com.druh.community.service.FollowService;
 import com.druh.community.service.LikeService;
 import com.druh.community.service.UserService;
+import com.druh.community.utils.CommunityConstant;
 import com.druh.community.utils.CommunityUtil;
 import com.druh.community.utils.HostHolder;
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +55,9 @@ public class UserController {
 
     @Autowired
     private LikeService likeService;
+
+    @Autowired
+    private FollowService followService;
 
     // 返回账户设置页
     @LoginRequired
@@ -143,6 +148,20 @@ public class UserController {
         // 收到赞的数量
         int count = likeService.getUserLikeCount(userId);
         model.addAttribute("likeCount", count);
+
+        // 关注数量
+        long followeeCount = followService.getFolloweeCount(userId, CommunityConstant.ENTITY_TYPE_USER);
+        model.addAttribute("followeeCount", followeeCount);
+        // 粉丝数量
+        long followerCount = followService.getFollowerCount(CommunityConstant.ENTITY_TYPE_USER, userId);
+        model.addAttribute("followerCount", followerCount);
+        // 是否已关注
+        boolean hasFollowed = false;
+        if (hostHolder.getUser() != null) {
+            hasFollowed = followService.hasFollowed(hostHolder.getUser().getId(), CommunityConstant.ENTITY_TYPE_USER, userId);
+        }
+        model.addAttribute("hasFollowed", hasFollowed);
+
         return "/site/profile";
     }
 }
