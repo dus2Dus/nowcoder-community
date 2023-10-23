@@ -35,7 +35,7 @@
         </if>
     </select>
 
-    <insert id="insertDiscussPost" parameterType="DiscussPost">
+    <insert id="insertDiscussPost" parameterType="DiscussPost" keyProperty="id">
         insert into discuss_post(<include refid="insertDiscussPosts"></include>)
         values(#{userId}, #{title}, #{content}, #{type}, #{status}, #{createTime}, #{commentCount}, #{score})
     </insert>

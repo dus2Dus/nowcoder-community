@@ -6,11 +6,13 @@ import com.druh.community.entity.Message;
 import com.druh.community.mapper.DiscussPostMapper;
 import com.druh.community.mapper.LoginTicketMapper;
 import com.druh.community.mapper.MessageMapper;
+import com.druh.community.mapper.elasticsearch.DiscussPostRepository;
 import com.druh.community.utils.MailClient;
 import com.druh.community.utils.SensitiveFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -98,4 +100,36 @@ class CommunityApplicationTests {
         int conversationCount = messageMapper.selectConversationCount(111);
         System.out.println(conversationCount);
     }
+
+    @Autowired
+    private DiscussPostRepository discussPostRepository;
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+    @Test
+    public void testInsert() {
+        discussPostRepository.save(discussPostMapper.selectDiscussPostById(241));
+        discussPostRepository.save(discussPostMapper.selectDiscussPostById(242));
+        discussPostRepository.save(discussPostMapper.selectDiscussPostById(243));
+
+    }
+
+    @Test
+    public void testInsertList() {
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(101, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(102, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(103, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(111, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(112, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(131, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(132, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(133, 0, 100));
+        discussPostRepository.saveAll(discussPostMapper.selectDiscussPosts(134, 0, 100));
+
+    }
+    @Test
+    public void testUpdate() {
+
+    }
+
 }

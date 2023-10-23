@@ -80,7 +80,7 @@
 				<img th:src="${user.headerUrl}" class="align-self-start mr-4 rounded-circle" alt="用户头像" style="width:50px;">
 				<div class="media-body">
 					<h5 class="mt-0 text-warning">
-						<span th:utext="${user.username}">nowcoder</span>
+						<span th:utext="${user?.username}">nowcoder</span>
 						<input type="hidden" id="entityId" th:value="${user.id}">
 						<button type="button" th:class="|btn ${hasFollowed?'btn-secondary':'btn-info'} btn-sm float-right mr-5 follow-btn|"
 								th:text="${hasFollowed?'已关注':'关注TA'}" th:if="${loginUser!=null&&loginUser.id!=user.id}">关注TA</button>

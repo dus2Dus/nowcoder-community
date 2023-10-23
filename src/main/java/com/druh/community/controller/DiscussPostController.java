@@ -1,9 +1,7 @@
 package com.druh.community.controller;
 
-import com.druh.community.entity.Comment;
-import com.druh.community.entity.DiscussPost;
-import com.druh.community.entity.Page;
-import com.druh.community.entity.User;
+import com.druh.community.entity.*;
+import com.druh.community.event.EventProducer;
 import com.druh.community.service.CommentService;
 import com.druh.community.service.DiscussPostService;
 import com.druh.community.service.LikeService;
@@ -42,6 +40,9 @@ public class DiscussPostController implements CommunityConstant{
     @Autowired
     private LikeService likeService;
 
+    @Autowired
+    private EventProducer eventProducer;
+
     // 发布帖子
     @PostMapping("/add")
     @ResponseBody
@@ -56,6 +57,14 @@ public class DiscussPostController implements CommunityConstant{
         post.setContent(content);
         post.setCreateTime(new Date());
         discussPostService.addDiscussionPost(post);
+
+        // 触发发帖事件
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(user.getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(post.getId());
+        eventProducer.fireEvent(event);
 
         // 报错的情况将来统一处理
         return CommunityUtil.getJSONString(0, "发布成功！");
