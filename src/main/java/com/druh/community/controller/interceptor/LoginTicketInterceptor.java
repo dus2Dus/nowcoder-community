@@ -73,7 +73,7 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         // 释放线程资源
         hostHolder.removeUser();
-        // 释放SecurityContext资源
-        SecurityContextHolder.clearContext();
+//        // 释放SecurityContext资源
+//        SecurityContextHolder.clearContext();
     }
 }

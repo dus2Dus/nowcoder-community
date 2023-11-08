@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <contextName>community</contextName>
-    <property name="LOG_PATH" value="D:/Coding Apps/Logs"/>
+    <property name="LOG_PATH" value="D:/Coding/Files/Idea Projects/nowcoder-community/Logs"/>
     <property name="APPDIR" value="community"/>
 
     <!-- error file -->
